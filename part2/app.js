@@ -1,4 +1,4 @@
-import SLReact from "slreact.js";
+import SLReact from "./slreact.js";
 
 const stories = [
   { name: "Didact introduction", url: "http://bit.ly/2pX7HNn" },
@@ -8,7 +8,6 @@ const stories = [
   { name: "Components and state", url: "http://bit.ly/2rE16nh" },
 ];
 
-/** @jsx SLReact.createElement */
 const appElement = (
   <div>
     <ul>{stories.map(storyElement)}</ul>
@@ -19,7 +18,6 @@ const appElement = (
 function storyElement({ name, url }) {
   const likes = Math.ceil(Math.random() * 100);
 
-  /** @jsx SLReact.createElement */
   return (
     <li>
       <button>{likes}🐶</button>

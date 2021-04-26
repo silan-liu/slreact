@@ -17,7 +17,7 @@ function importFromBlow() {
         dom.addEventListener(eventType, props[name]);
       });
 
-    // property
+    // set property
     const isAttribute = (name) => !isListener(name) && name != "children";
     Object.keys(props)
       .filter(isAttribute)

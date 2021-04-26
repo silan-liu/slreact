@@ -32,11 +32,13 @@ function render(element, parentDom) {
   parentDom.appendChild(dom);
 }
 
+// jsx 经 babel 转换后，会变成调用 createElement 的形式
 function createElement(type, config, ...args) {
   let props = Object.assign({}, config);
   const hasChildren = args.length > 0;
   const rawChildren = hasChildren ? [].concat(...args) : [];
 
+  // 过滤空子节点，并将文本特殊处理
   props.children = rawChildren
     .filter((c) => {
       const result = c != null && c != false;

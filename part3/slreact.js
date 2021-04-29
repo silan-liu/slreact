@@ -7,6 +7,7 @@ function render(element, parentDom) {
   rootInstance = nextInstance;
 }
 
+// dom 更新操作
 function reconcile(parentDom, instance, element) {
   if (instance == null) {
     const newInstance = instantitate(element);
@@ -143,42 +144,8 @@ function createTextElement(value) {
   return createElement(TEXT_ELEMENT, { nodeValue: value });
 }
 
-function render1(element, parentDom) {
-  console.log("render1");
-  const { type, props } = element;
-
-  // create dom element
-  const isTextElement = type === TEXT_ELEMENT;
-  const dom = isTextElement
-    ? document.createTextNode("")
-    : document.createElement(type);
-
-  // listener
-  const isListener = (name) => name.startsWith("on");
-  Object.keys(props)
-    .filter(isListener)
-    .forEach((name) => {
-      const eventType = name.toLocaleLowerCase().substring(2);
-      dom.addEventListener(eventType, props[name]);
-    });
-
-  // property
-  const isAttribute = (name) => !isListener(name) && name != "children";
-  Object.keys(props)
-    .filter(isAttribute)
-    .forEach((name) => {
-      dom[name] = props[name];
-    });
-
-  const childElements = props.children || [];
-  childElements.forEach((child) => render1(child, dom));
-
-  parentDom.appendChild(dom);
-}
-
 const SLReact = {
   render,
-  render1,
   createElement,
 };
 

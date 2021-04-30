@@ -1,5 +1,33 @@
 const TEXT_ELEMENT = "text";
 
+class Component {
+  constructor(props) {
+    this.props = props;
+    this.state = this.state || {};
+  }
+
+  setState(state) {
+    this.state = Object.assign({}, this.state, state);
+
+    updateInstance(this.__internalInstance);
+  }
+}
+
+// 创建组件对象，内部关联 dom 实例
+function createPublicInstance(element, internalInstance) {
+  const { type, props } = element;
+  const publicInstance = new type(props);
+  publicInstance.__internalInstance = internalInstance;
+  return publicInstance;
+}
+
+function updateInstance(internalInstance) {
+  const parentDom = internalInstance.dom.parentNode;
+  const element = internalInstance.element;
+
+  reconcile(parentDom, internalInstance, element);
+}
+
 let rootInstance = null;
 function render(element, parentDom) {
   const prevInstance = rootInstance;
@@ -13,26 +41,50 @@ function reconcile(parentDom, instance, element) {
     const newInstance = instantitate(element);
     console.log("create dom ", parentDom, newInstance.dom);
     parentDom.appendChild(newInstance.dom);
+
     return newInstance;
   } else if (element == null) {
     console.log("remove dom");
     // remove，若新子节点数 < 原节点数，需移除
     parentDom.removeChild(instance.dom);
+
     return null;
-  } else if (instance.element.type == element.type) {
-    console.log("reuse dom");
-    // 重用节点，更新属性
-    updateDomProperties(instance.dom, instance.element.props, element.props);
-    instance.childInstances = reconcileChildren(instance, element);
-    instance.element = element;
-    return instance;
-  } else {
+  } else if (instance.element.type != element.type) {
     console.log("replace dom");
 
     // 替换原节点
     const newInstance = instantitate(element);
     parentDom.replaceChild(newInstance.dom, instance.dom);
+
     return newInstance;
+  } else if (typeof element.type === "string") {
+    console.log("reuse dom");
+
+    // 重用节点，更新属性
+    updateDomProperties(instance.dom, instance.element.props, element.props);
+    instance.childInstances = reconcileChildren(instance, element);
+    instance.element = element;
+
+    return instance;
+  } else {
+    console.log("update component");
+
+    // component
+    // 更新 props
+    instance.publicInstance.props = element.props;
+
+    // 重新构建节点信息
+    const childElement = instance.publicInstance.render();
+    const oldChildInstance = instance.childInstance;
+
+    // 更新 dom 节点
+    const childInstance = reconcile(parentDom, oldChildInstance, childElement);
+
+    instance.childInstance = childInstance;
+    instance.dom = childInstance.dom;
+    instance.element = element;
+
+    return instance;
   }
 }
 
@@ -61,24 +113,50 @@ function reconcileChildren(instance, element) {
 function instantitate(element) {
   console.log("instantitate", element);
   const { type, props } = element;
-  const isTextElement = type === TEXT_ELEMENT;
-  const dom = isTextElement
-    ? document.createTextNode("")
-    : document.createElement(type);
 
-  // 更新属性
-  updateDomProperties(dom, [], props);
+  // 如果 type 是字符串，则表明非组件
+  const isDomElement = typeof type === "string";
 
-  // 处理子节点
-  const childElements = props.children || [];
-  const childInstances = childElements.map(instantitate);
-  const childDoms = childInstances.map((childInstance) => childInstance.dom);
+  if (isDomElement) {
+    const isTextElement = type === TEXT_ELEMENT;
+    const dom = isTextElement
+      ? document.createTextNode("")
+      : document.createElement(type);
 
-  childDoms.forEach((childDom) => dom.appendChild(childDom));
+    // 更新属性
+    updateDomProperties(dom, [], props);
 
-  const instance = { dom, element, childInstances };
+    // 处理子节点
+    const childElements = props.children || [];
+    const childInstances = childElements.map(instantitate);
+    const childDoms = childInstances.map((childInstance) => childInstance.dom);
 
-  return instance;
+    childDoms.forEach((childDom) => dom.appendChild(childDom));
+
+    const instance = { dom, element, childInstances };
+
+    return instance;
+  } else {
+    const instance = {};
+    const publicInstance = createPublicInstance(element, instance);
+
+    // 调用组件的 render 方法，返回节点
+    const childElement = publicInstance.render();
+
+    // 调用 instantiate 创建 dom & virual dom，因为 render 方法只能返回一个节点
+    const childInstance = instantitate(childElement);
+
+    const dom = childInstance.dom;
+
+    Object.assign(instance, {
+      dom,
+      element,
+      childInstance,
+      publicInstance,
+    });
+
+    return instance;
+  }
 }
 
 // 更新 dom 属性
@@ -147,6 +225,7 @@ function createTextElement(value) {
 const SLReact = {
   render,
   createElement,
+  Component,
 };
 
 export default SLReact;

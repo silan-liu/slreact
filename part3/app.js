@@ -17,27 +17,27 @@ function ramdomLikes() {
 
 const stories = [
   {
-    name: "Didact introduction",
+    name: "part1",
     url: "http://bit.ly/2pX7HNn",
     likes: ramdomLikes(),
   },
   {
-    name: "Rendering DOM elements ",
+    name: "part2",
     url: "http://bit.ly/2qCOejH",
     likes: ramdomLikes(),
   },
   {
-    name: "Element creation and JSX",
+    name: "part3",
     url: "http://bit.ly/2qGbw8S",
     likes: ramdomLikes(),
   },
   {
-    name: "Instances and reconciliation",
+    name: "part4",
     url: "http://bit.ly/2q4A746",
     likes: ramdomLikes(),
   },
   {
-    name: "Components and state",
+    name: "part5",
     url: "http://bit.ly/2rE16nh",
     likes: ramdomLikes(),
   },

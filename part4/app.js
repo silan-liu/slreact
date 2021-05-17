@@ -28,11 +28,33 @@ const stories = [
 ];
 
 class App extends SLReact.Component {
+  constructor(props) {
+    super(props);
+    const { stories } = props;
+
+    this.state = { stories };
+  }
+
+  componentDidMount() {
+    super.componentDidMount();
+    console.log("App componentDidMount");
+
+    // test componentDidUnMount
+    // setTimeout(() => {
+    //   this.setState({ stories: [] });
+    // }, 1000);
+  }
+
+  componentWillMount() {
+    super.componentWillMount();
+    console.log("App componentWillMount");
+  }
+
   render() {
     return (
       <div>
         <ul>
-          {this.props.stories.map((story) => {
+          {this.state.stories.map((story) => {
             return <Story name={story.name} url={story.url} />;
           })}
         </ul>

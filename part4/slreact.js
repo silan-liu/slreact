@@ -6,10 +6,62 @@ class Component {
     this.state = this.state || {};
   }
 
-  setState(state) {
-    this.state = Object.assign({}, this.state, state);
+  setState(nextState) {
+    if (
+      this.__internalInstance &&
+      this.shouldComponentUpdate(this.props, nextState)
+    ) {
+      // 组件生命周期 componentWillUpdate
+      this.componentWillUpdate(this.props, nextState);
 
-    updateInstance(this.__internalInstance);
+      this.state = Object.assign({}, this.state, nextState);
+
+      updateInstance(this.__internalInstance);
+
+      // 组件生命周期 componentDidUpdate
+      this.componentDidUpdate(this.props, nextState);
+    } else {
+      this.state = Object.assign({}, this.state, nextState);
+    }
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    return nextProps != this.props || nextState != this.state;
+  }
+
+  componentWillReceiveProps(nextProps) {
+    console.log(`componentWillReceiveProps:${nextProps}`);
+    return undefined;
+  }
+
+  componentWillUpdate(nextProps, nextState) {
+    console.log(`componentWillUpdate:${nextProps}, ${nextState}`);
+
+    return undefined;
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    console.log(`componentDidUpdate:${prevProps}, ${prevState}`);
+
+    return undefined;
+  }
+
+  componentWillMount() {
+    console.log(`componentWillMount`);
+
+    return undefined;
+  }
+
+  componentDidMount() {
+    console.log(`componentDidMount`);
+
+    return undefined;
+  }
+
+  componentWillUnmount() {
+    console.log(`componentWillUnmount`);
+
+    return undefined;
   }
 }
 
@@ -17,6 +69,10 @@ class Component {
 function createPublicInstance(element, internalInstance) {
   const { type, props } = element;
   const publicInstance = new type(props);
+
+  // 组件生命周期 componentWillMount
+  publicInstance.componentWillMount();
+
   publicInstance.__internalInstance = internalInstance;
   return publicInstance;
 }
@@ -42,11 +98,21 @@ function reconcile(parentDom, instance, element) {
     console.log("create dom ", parentDom, newInstance.dom);
     parentDom.appendChild(newInstance.dom);
 
+    // 组件生命周期 componentDidMount
+    if (typeof newInstance.element.type !== "string") {
+      newInstance.publicInstance.componentDidMount();
+    }
+
     return newInstance;
   } else if (element == null) {
     console.log("remove dom");
     // remove，若新子节点数 < 原节点数，需移除
     parentDom.removeChild(instance.dom);
+
+    // 组件生命周期 componentWillUnmount
+    if (typeof instance.element.type !== "string") {
+      instance.publicInstance.componentWillUnmount();
+    }
 
     return null;
   } else if (instance.element.type != element.type) {
@@ -71,6 +137,8 @@ function reconcile(parentDom, instance, element) {
 
     // component
     // 更新 props
+    // 组件生命周期 componentWillReceiveProps
+    instance.publicInstance.componentWillReceiveProps(element.props);
     instance.publicInstance.props = element.props;
 
     // 重新构建节点信息
